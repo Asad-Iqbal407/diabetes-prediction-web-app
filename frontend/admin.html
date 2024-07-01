@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - User Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .search-bar {
+            margin: 20px 0;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        button.delete-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        button.delete-button:hover {
+            background-color: #ff1a1a;
+       
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin - User Data</h1>
+    <div class="search-bar">
+        <input type="text" id="search" placeholder="Search by gender, age, etc.">
+    </div>
+    <table id="userData">
+        <thead>
+            <tr>
+                <th>Gender</th>
+                <th>Age</th>
+                <th>Hypertension</th>
+                <th>Heart Disease</th>
+                <th>Smoking History</th>
+                <th>BMI</th>
+                <th>HbA1c Level</th>
+                <th>Blood Glucose Level</th>
+                <th>Prediction</th>
+                <th>Confidence</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function fetchUserData() {
+            try {
+                const response = await fetch('http://localhost:3000/admin/data');
+                const data = await response.json();
+                displayData(data);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        }
+
+        function displayData(data) {
+            const tableBody = document.querySelector('#userData tbody');
+            tableBody.innerHTML = '';
+            data.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.gender}</td>
+                    <td>${user.age}</td>
+                    <td>${user.hypertension}</td>
+                    <td>${user.heart_disease}</td>
+                    <td>${user.smoking_history}</td>
+                    <td>${user.bmi}</td>
+                    <td>${user.HbA1c_level}</td>
+                    <td>${user.blood_glucose_level}</td>
+                    <td>${user.prediction}</td>
+                    <td>${(user.confidence * 100).toFixed(2)}%</td>
+                    <td><button class="delete-button" onclick="deleteUser('${user._id}')">Delete</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function deleteUser(id) {
+            try {
+                const response = await fetch(`http://localhost:3000/admin/data/${id}`, {
+                    method: 'DELETE',
+                });
+                if (response.ok) {
+                    fetchUserData();
+                } else {
+                    console.error('Failed to delete user');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+            }
+        }
+
+        document.getElementById('search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#userData tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let match = false;
+                cells.forEach(cell => {
+                    if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                        match = true;
+                    }
+                });
+                row.style.display = match ? '' : 'none';
+            });
+        });
+
+        window.onload = fetchUserData;
+    </script>
+</body>
+</html>
